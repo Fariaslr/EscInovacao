@@ -1,5 +1,3 @@
-
-# 1. Importando bibliotecas
 import pandas as pd
 import string
 import re
@@ -12,14 +10,11 @@ import nltk
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
-# Baixar stopwords (apenas na primeira vez)
 nltk.download('stopwords')
 
-# 2. Carregar dataset do Kaggle
 file_path = "spam.csv"
 df = pd.read_csv('spam.csv', encoding='latin-1')[['v1', 'v2']]
 
-# Renomear colunas
 df = df[['v1', 'v2']]
 df.columns = ['label', 'message']
 
