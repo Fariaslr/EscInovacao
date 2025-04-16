@@ -1,3 +1,4 @@
+# 1. Importando bibliotecas
 import pandas as pd
 import string
 import re
