@@ -24,8 +24,26 @@ if file:
         else:
             df = pd.read_excel(file)
 
-        # Sidebar
         st.sidebar.header("🔧 Filtros de Dados")
+        
+        # Tratamento de nulos
+        st.sidebar.markdown("### 🧹 Tratamento de Dados Nulos")
+        tratamento_nulos = st.sidebar.radio(
+            "Escolha o tratamento para valores ausentes:",
+            ("Não tratar", "Remover linhas com nulos", "Preencher com a média")
+        )
+
+        if tratamento_nulos == "Remover linhas com nulos":
+            df = df.dropna()
+        elif tratamento_nulos == "Preencher com a média":
+            for col in df.select_dtypes(include=['float64', 'int64']).columns:
+                df[col] = df[col].fillna(df[col].mean())
+
+        # Visualizar nulos após tratamento
+        st.subheader("🧪 Verificação de Dados Nulos")
+        st.write(df.isnull().sum())
+
+        # Seleção de colunas
         colunas_numericas = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
         colunas_categoricas = df.select_dtypes(include=['object']).columns.tolist()
 
@@ -54,7 +72,7 @@ if file:
 
         with st.expander("📉 Histograma"):
             col_hist = st.selectbox("Coluna para histograma", colunas_numericas, key="hist")
-            fig, ax = plt.subplots(figsize=(5,3))
+            fig, ax = plt.subplots(figsize=(5, 3))
             sns.histplot(df_filtrado[col_hist], kde=True, ax=ax)
             ax.set_title(f'Histograma de {col_hist}')
             ax.set_xlabel(col_hist)
