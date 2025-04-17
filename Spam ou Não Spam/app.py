@@ -66,7 +66,6 @@ def preprocess_text(text):
     tokens = text.split()
     tokens = [word for word in tokens if word not in stopwords.words('english')]
     
-    return ' '.join(tokens)
 
 def train_model(X_train, y_train):
     """
