@@ -30,29 +30,31 @@ cd data-analyzer-app
 
 ### 2. Crie e ative um ambiente virtual (recomendado)
 
-No **Windows**:
+#### No **Windows**:
 
 ```bash
 python -m venv venv
-.env\Scriptsctivate
+venv\Scripts\activate
 ```
 
-No **Linux/Mac**:
+#### No **Linux/Mac**:
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
+> Dica: após ativar, o terminal mostrará algo como `(venv)` no início da linha.
+
 ### 3. Instale as dependências
 
-Com o `requirements.txt`:
+#### Com o `requirements.txt`:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Ou instale manualmente:
+#### Ou instale manualmente:
 
 ```bash
 pip install streamlit pandas seaborn matplotlib openpyxl scikit-learn

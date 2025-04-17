@@ -24,20 +24,12 @@ if file:
         else:
             df = pd.read_excel(file)
 
-        st.sidebar.header("🔧 Filtros de Dados")
-        
-        # Tratamento de nulos
-        st.sidebar.markdown("### 🧹 Tratamento de Dados Nulos")
-        tratamento_nulos = st.sidebar.radio(
-            "Escolha o tratamento para valores ausentes:",
-            ("Não tratar", "Remover linhas com nulos", "Preencher com a média")
-        )
-
-        if tratamento_nulos == "Remover linhas com nulos":
-            df = df.dropna()
-        elif tratamento_nulos == "Preencher com a média":
-            for col in df.select_dtypes(include=['float64', 'int64']).columns:
-                df[col] = df[col].fillna(df[col].mean())
+        # Conversão de colunas de data para datetime
+        for col in df.select_dtypes(include=['object']).columns:
+            try:
+                df[col] = pd.to_datetime(df[col], errors='ignore')  # Converte se possível, caso contrário ignora
+            except Exception as e:
+                pass
 
         # Visualizar nulos após tratamento
         st.subheader("🧪 Verificação de Dados Nulos")
@@ -57,8 +49,16 @@ if file:
         st.subheader("📋 Visualização da Tabela")
         st.dataframe(df)
 
-        st.subheader("📈 Estatísticas Descritivas")
-        st.write(df.describe())
+        st.subheader("📊 Estatísticas Descritivas (Média, Mediana e Desvio Padrão)")
+
+        # Calcular as estatísticas manualmente
+        stats_df = pd.DataFrame({
+            "Média": df[colunas_numericas].mean(),
+            "Mediana": df[colunas_numericas].median(),
+            "Desvio Padrão": df[colunas_numericas].std()
+        })
+
+        st.dataframe(stats_df.T)    
 
         st.subheader(f"🔍 Dados filtrados com base em **{col_filtro}** entre {val_min:.2f} e {val_max:.2f}")
         st.dataframe(df_filtrado)
@@ -80,23 +80,45 @@ if file:
             st.pyplot(fig)
 
         with st.expander("🔘 Gráfico de Dispersão (Scatter Plot)"):
-            x_axis = st.selectbox("Eixo X", colunas_numericas, key="x")
-            y_axis = st.selectbox("Eixo Y", colunas_numericas, key="y")
+            colunas_eixo_x = df_filtrado.select_dtypes(include=['float64', 'int64', 'datetime64']).columns.tolist()
+            colunas_eixo_y = df_filtrado.select_dtypes(include=['float64', 'int64']).columns.tolist()
+
+            x_axis = st.selectbox("Eixo X", colunas_eixo_x, key="x")
+            y_axis = st.selectbox("Eixo Y", colunas_eixo_y, key="y")
+
             fig, ax = plt.subplots()
             sns.scatterplot(data=df_filtrado, x=x_axis, y=y_axis, ax=ax)
             ax.set_title(f'{y_axis} vs {x_axis}')
             ax.set_xlabel(x_axis)
             ax.set_ylabel(y_axis)
+            plt.xticks(rotation=45)  # Rotaciona datas se necessário
             st.pyplot(fig)
 
         with st.expander("📊 Gráfico de Barras"):
             col_bar = st.selectbox("Coluna para gráfico de barras", df.columns)
-            fig, ax = plt.subplots()
-            df_filtrado[col_bar].value_counts().plot(kind='bar', ax=ax)
-            ax.set_title(f'Contagem por categoria em {col_bar}')
-            ax.set_xlabel(col_bar)
-            ax.set_ylabel("Contagem")
-            st.pyplot(fig)
+
+            aplicar_agrupamento = st.checkbox("Agrupar por prefixo (antes do hífen)", value=False)
+
+            try:
+                if aplicar_agrupamento:
+                    # Agrupar por prefixo antes do hífen
+                    df_filtrado['grupo'] = df_filtrado[col_bar].astype(str).str.split('-').str[0].str.strip()
+                    dados_barras = df_filtrado['grupo'].value_counts()
+                    label_eixo = "Grupo"
+                else:
+                    dados_barras = df_filtrado[col_bar].astype(str).value_counts()
+                    label_eixo = col_bar
+
+                fig, ax = plt.subplots()
+                dados_barras.plot(kind='bar', ax=ax)
+                ax.set_title(f'Contagem por {"grupo" if aplicar_agrupamento else "categoria"} em {col_bar}')
+                ax.set_xlabel(label_eixo)
+                ax.set_ylabel("Contagem")
+                st.pyplot(fig)
+
+            except Exception as e:
+                st.warning(f"Erro ao gerar gráfico de barras: {e}")
+
 
     except Exception as e:
         st.error(f"Ocorreu um erro ao processar o arquivo: {e}")
